@@ -4,12 +4,12 @@
 
 %{
 
-char minify;
+char compact;
 
 #define DO_PRINT printf("%.*s", (int)yyleng, yytext)
 
 static void print_white(int n) {
-  while(!minify && n--)
+  while(!compact && n--)
     fwrite(" ", 1, 1, stdout);
 }
 
@@ -44,11 +44,11 @@ exp     [eE][+-]?[0-9]+
 <C_COMMENT>.    { print_white(1); }
 
 "//"            { print_white(2); BEGIN(CPP_COMMENT); }
-<CPP_COMMENT>\r\n? { if(!minify) DO_PRINT; BEGIN(INITIAL); }
-<CPP_COMMENT>\n { if(!minify) DO_PRINT; BEGIN(INITIAL); }
+<CPP_COMMENT>\r\n? { if(!compact) DO_PRINT; BEGIN(INITIAL); }
+<CPP_COMMENT>\n { if(!compact) DO_PRINT; BEGIN(INITIAL); }
 <CPP_COMMENT>.  { print_white(1); }
 
-{white}          { if(!minify) DO_PRINT; }
+{white}          { if(!compact) DO_PRINT; }
 "true"           { DO_PRINT; }
 "false"          { DO_PRINT; }
 "null"           { DO_PRINT; }
@@ -60,8 +60,6 @@ exp     [eE][+-]?[0-9]+
 {int}{exp}       { DO_PRINT; }
 {int}            {  DO_PRINT; }
 
-
-
 [,:\{\}\][]      {  DO_PRINT; }
 
 .                { fprintf(stderr, "not handled: %c\n", yytext[0]); }
@@ -70,11 +68,11 @@ exp     [eE][+-]?[0-9]+
 %%
 
 int main(int argc, char *argv[]) {
-  minify = 0;
+  compact = 0;
   if(argc > 1 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")))
-    fprintf(stderr, "Usage: json_uncomment [--minify or -m]\n  Reads stdin, writes stdout\n");
-  else if(argc > 1 && (!strcmp(argv[1], "--minify") || !strcmp(argv[1], "-m")))
-    minify = 1;
+    fprintf(stderr, "Usage: json_uncomment [--compact or -c]\n  Reads stdin, writes stdout\n");
+  else if(argc > 1 && (!strcmp(argv[1], "--compact") || !strcmp(argv[1], "-c")))
+    compact = 1;
 
   json_uncomment_lex();
 }
