@@ -135,10 +135,7 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    if(err) {
-      if(in != stdin)
-        fclose(in);
-    } else {
+    if(!err) {
       yyscan_t scanner;
       json_uncomment_lex_init(&scanner);
 
@@ -155,6 +152,12 @@ int main(int argc, char *argv[]) {
       json_uncomment_lex_destroy(scanner);
       return data.rc;
     }
+
+    fclose(in);
   }
+
+  // close output file handles for clean piping e.g. on win, python's subprocess.pipe
+  fclose(stdout);
+  fclose(stderr);
   return 1;
 }
