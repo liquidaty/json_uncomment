@@ -14,12 +14,16 @@ struct position {
 struct json_uncomment_data {
   char compact;
   const char *filename;
+#ifndef NO_TRACKING
   struct position position;
+#endif
   int rc;
+  FILE *out;
 };
 
 #define JSON_UNCOMMENT_DATA ((struct json_uncomment_data *)yyextra)
 
+#ifndef NO_TRACKING
 void update_tracking(const char *s, int len, struct position *position) {
   for(int i = 0; i < len; i++) {
     switch(s[i]) {
@@ -35,20 +39,36 @@ void update_tracking(const char *s, int len, struct position *position) {
     }
   }
 }
+#endif
 
-#define DO_PRINT do { printf("%.*s", (int)yyleng, yytext); update_tracking(yytext, (int)yyleng, &JSON_UNCOMMENT_DATA->position); } while(0)
+/*
+#define DO_PRINT do { fprintf(JSON_UNCOMMENT_DATA->out, "%.*s", (int)yyleng, yytext); update_tracking(yytext, (int)yyleng, &JSON_UNCOMMENT_DATA->position); } while(0)
+*/
 
-static void print_white_aux(int n) {
+#ifdef NO_TRACKING
+#define do_update
+#else
+#define do_update update_tracking(yytext, (int)yyleng, &JSON_UNCOMMENT_DATA->position)
+#endif
+
+#define DO_PRINT do { fwrite(yytext, 1, yyleng, JSON_UNCOMMENT_DATA->out); do_update; } while(0)
+
+static void print_white_aux(int n, FILE *out) {
   while(n-- > 0)
-    fwrite(" ", 1, 1, stdout);
+    fwrite(" ", 1, 1, out);
 }
 
-#define print_white(n) do { if (!JSON_UNCOMMENT_DATA->compact) { print_white_aux(n); JSON_UNCOMMENT_DATA->position.col++; } } while(0)
+#ifdef NO_TRACKING
+#define print_white(n) do { if (!JSON_UNCOMMENT_DATA->compact) { print_white_aux(n, JSON_UNCOMMENT_DATA->out); } } while(0)
+#else
+#define print_white(n) do { if (!JSON_UNCOMMENT_DATA->compact) { print_white_aux(n, JSON_UNCOMMENT_DATA->out); JSON_UNCOMMENT_DATA->position.col++; } } while(0)
+#endif
 
 %}
 
 %x C_COMMENT
 %x CPP_COMMENT
+%x QUOTE
 
 white   [ \t\n\r\v\f]
 bom     \xEF\xBB\xBF
@@ -87,7 +107,13 @@ exp     [eE][+-]?[0-9]+
 "false"          { DO_PRINT; }
 "null"           { DO_PRINT; }
 
+ /*
 \"{utf_8}*\"     { DO_PRINT; }
+ */
+
+\"               { DO_PRINT; BEGIN(QUOTE); }
+<QUOTE>{utf_8}{1,64}   { DO_PRINT; }
+<QUOTE>\"        { DO_PRINT; BEGIN(INITIAL); }
 
 {int}{frac}{exp} { DO_PRINT; }
 {int}{frac}      { DO_PRINT; }
@@ -96,14 +122,25 @@ exp     [eE][+-]?[0-9]+
 
 [,:\{\}\][]      {  DO_PRINT; }
 
-.                { fprintf(stderr, "%s%sparse error: unexpected: %c in line %i, column %i\n",
+<QUOTE>.         |
+.                {
+#ifdef NO_TRACKING
+fprintf(stderr, "%s%sparse error: unexpected: %c\n",
+                           JSON_UNCOMMENT_DATA->filename ? JSON_UNCOMMENT_DATA->filename : "",
+                           JSON_UNCOMMENT_DATA->filename ? ": " : "",
+                           yytext[0]
+                           );
+                   JSON_UNCOMMENT_DATA->rc = 1;
+#else
+fprintf(stderr, "%s%sparse error: unexpected: %c in line %i, column %i\n",
                            JSON_UNCOMMENT_DATA->filename ? JSON_UNCOMMENT_DATA->filename : "",
                            JSON_UNCOMMENT_DATA->filename ? ": " : "",
                            yytext[0],
                            JSON_UNCOMMENT_DATA->position.line + 1,
                            JSON_UNCOMMENT_DATA->position.col + 1
-                           ); 
+                           );
                    JSON_UNCOMMENT_DATA->rc = 1;
+#endif
                  }
 
 <<EOF>>          { return JSON_UNCOMMENT_DATA->rc; }
@@ -111,16 +148,28 @@ exp     [eE][+-]?[0-9]+
 
 int main(int argc, char *argv[]) {
   const char *filename = NULL;
+  FILE *out = stdout;
   int compact = 0;
   if(argc > 1 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")))
-    fprintf(stderr, "Usage: json_uncomment [--compact or -c] [-f filename]\n  Reads stdin, writes stdout\n");
+    fprintf(stderr, "Usage: json_uncomment [--compact or -c] [-f filename] [-o output_filename]\n  Reads stdin, writes stdout\n");
   else {
     int err = 0;
     FILE *in = stdin;
     for(int i = 1; i < argc; i++) {
       if(!strcmp(argv[i], "--compact") || !strcmp(argv[i], "-c"))
         compact = 1;
-      else if(!strcmp(argv[i], "-f") && i + 1 < argc) {
+      else if(!strcmp(argv[i], "-o") && i + 1 < argc) {
+        i++;
+        FILE *f = fopen(argv[i], "wb");
+        if(!f) {
+          fprintf(stderr, "Unable to open file %s for writing\n", argv[i]);
+          err = 1;
+        } else {
+          if(out)
+            fclose(out);
+          out = f;
+        }
+      } else if(!strcmp(argv[i], "-f") && i + 1 < argc) {
         i++;
         FILE *f = fopen(argv[i], "rb");
         if(!f) {
@@ -142,11 +191,11 @@ int main(int argc, char *argv[]) {
       struct json_uncomment_data data;
       memset(&data, 0, sizeof(data));
 
+      data.out = out;
       data.compact = compact;
       if(filename)
         data.filename = filename;
       json_uncomment_lex_init_extra(&data, &scanner);
-
       json_uncomment_set_in(in, scanner);
       json_uncomment_lex(scanner);
       json_uncomment_lex_destroy(scanner);
@@ -156,8 +205,7 @@ int main(int argc, char *argv[]) {
     fclose(in);
   }
 
-  // close output file handles for clean piping e.g. on win, python's subprocess.pipe
-  fclose(stdout);
+  fclose(out);
   fclose(stderr);
-  return 1;
+  return 0;
 }
