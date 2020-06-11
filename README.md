@@ -13,9 +13,16 @@ json_uncomment uses a very simple approach to solve the above issues. First, it 
 * by default, the output has the same number of characters as the input (comments are replaced with whitespace), so that any subsequent schema validation location tracking will properly corresponds to the original input
 * in optional "compact" mode, extraneous whitespace is not emitted
 
+## performance
+json_uncomment is ultra-lite and extremely fast. It reads via stream, writes to stream, and never asks for more memory no matter how much big the input and no matter how long the strings in the input are
+
+## tracking
+json_uncomment tracks line and column numbers in order to provide location information output messages (in addition, json_uncomment_untracked can be built as a slightly more streamlined version that excludes the tracking feature)
+
 ## building
 To build, run:
-   make [RELEASE=1] json_uncomment
+   make [RELEASE=1] json_uncomment # normal version
+   make [RELEASE=1] json_uncomment_untracked # version without tracking feature
 
 To cross-compile using mingw64, run:
    make [RELEASE=1] WIN=1
