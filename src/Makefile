@@ -29,6 +29,9 @@ all:	json_uncomment${EXE}
 json_uncomment${EXE}: json_uncomment.lex.c
 	$(CC) ${CFLAGS} -o $@ json_uncomment.lex.c
 
+json_uncomment_untracked${EXE}: json_uncomment.lex.c
+	$(CC) ${CFLAGS} -DNO_TRACKING -o $@ json_uncomment.lex.c
+
 json_uncomment.lex.c: json_uncomment.l
 	flex -o json_uncomment.lex.c json_uncomment.l
 
