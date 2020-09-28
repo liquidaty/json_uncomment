@@ -8,8 +8,8 @@ There are many JSON uncomment utilities, but none I tried worked for my purposes
 
 ## how
 json_uncomment uses a very simple approach to solve the above issues. First, it uses a proper lexer to parse the JSON. Second, it provides an option to retain input size (and therefore locations other than for comments). Features include:
-* very small code base of ~50 lines of lex instructions (which should be easily portable to any language), plus ~12 lines of wrapper code
-* can be compiled / run on any platform and easily invoked by virtually any language that can call a shell and pipe stdin/stdout
+* very small code base of ~200 lines of code, much of which are just lex instructions (which should be easily portable to any language)
+* can be compiled / run on any platform and easily invoked by virtually any language that can use a shared lib and/or call a shell and pipe stdin/stdout
 * by default, the output has the same number of characters as the input (comments are replaced with whitespace), so that any subsequent schema validation location tracking will properly corresponds to the original input
 * in optional "compact" mode, extraneous whitespace is not emitted
 
