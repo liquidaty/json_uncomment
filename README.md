@@ -3,7 +3,7 @@ Cross-platform utility to strip comments and optionally minify JSON
 
 ## why
 There are many JSON uncomment utilities, but none I tried worked for my purposes:
-* Many had fundamental problems such as not working for all JSON. For example, I don't believe it's possible to properly strip comments using regular expressions, and yet many libraries try to do exactly that (such as https://github.com/vaidik/commentjson/issues/16)
+* Many had fundamental problems such as not working for all JSON. For example, it's not possible to properly strip comments using regular expressions, and yet many libraries try to do exactly that (such as https://github.com/vaidik/commentjson/issues/16)
 * Every utility I tried would change the size of the output, which is a problem for me because where possible I prefer to use JSON schema validation, and with these utilies that change the input size, location tracking was useless because locations in the stripped JSON could not be translated into locations in the original input
 
 ## how
