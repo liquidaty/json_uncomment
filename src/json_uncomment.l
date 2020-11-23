@@ -170,12 +170,19 @@ fprintf(stderr, "%s%sparse error: unexpected: %c in line %i, column %i\n",
 <<EOF>>          { return JSON_UNCOMMENT_DATA->rc; }
 %%
 
+
+#define VERSION "2020.11.23"
+
 int main(int argc, char *argv[]) {
   const char *filename = NULL;
   FILE *out = stdout;
   int compact = 0;
-  if(argc > 1 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h")))
-    fprintf(stderr, "Usage: json_uncomment [--compact or -c] [-f filename] [-o output_filename]\n  Reads stdin, writes stdout\n");
+  if(argc > 1 && (!strcmp(argv[1], "--help") || !strcmp(argv[1], "-h"))) {
+    fprintf(stderr, "Usage:\n");
+    fprintf(stderr, "  json_uncomment help_option\n    where help_option is --help, --h, --build_no or -v \n");
+    fprintf(stderr, "  json_uncomment [--compact or -c] [-f filename] [-o output_filename]\n  Reads stdin, writes stdout\n");
+  } else if(argc > 1 && (!strcmp(argv[1], "--version") || !strcmp(argv[1], "-v")))
+    fprintf(stderr, "Version: %s\n", VERSION);
   else {
     int err = 0;
     FILE *in = stdin;
