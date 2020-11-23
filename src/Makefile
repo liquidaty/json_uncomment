@@ -1,8 +1,8 @@
-# compile for debugging: make
+# compile for debugging: make RELEASE=0
 # compile for release:   make RELEASE=1
 
 WIN=0
-RELEASE=0
+RELEASE=1
 
 ifneq ($(findstring w64,$(CC)),) # mingw64
 	WIN=64
@@ -35,7 +35,7 @@ json_uncomment_untracked${EXE}: json_uncomment.lex.c
 	$(CC) ${CFLAGS} -DNO_TRACKING -o $@ json_uncomment.lex.c
 
 json_uncomment.lex.c: json_uncomment.l
-	flex -o json_uncomment.lex.c json_uncomment.l
+	@flex -o json_uncomment.lex.c json_uncomment.l
 
 install: json_uncomment${EXE}
 	cp -p json_uncomment${EXE} ${INSTALL_PATH}/bin
@@ -44,4 +44,4 @@ uninstall:
 	rm -f ${INSTALL_PATH}/bin/json_uncomment${EXE}
 
 clean:
-	rm json.lex.[ch] json_uncomment${EXE}
+	rm -f json.lex.[ch] json_uncomment${EXE}
