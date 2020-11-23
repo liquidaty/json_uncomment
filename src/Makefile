@@ -24,6 +24,8 @@ else
   DOT_O=.o
 endif
 
+INSTALL_PATH=/usr/local
+
 all:	json_uncomment${EXE}
 
 json_uncomment${EXE}: json_uncomment.lex.c
@@ -34,6 +36,12 @@ json_uncomment_untracked${EXE}: json_uncomment.lex.c
 
 json_uncomment.lex.c: json_uncomment.l
 	flex -o json_uncomment.lex.c json_uncomment.l
+
+install: json_uncomment${EXE}
+	cp -p json_uncomment${EXE} ${INSTALL_PATH}/bin
+
+uninstall:
+	rm -f ${INSTALL_PATH}/bin
 
 clean:
 	rm json.lex.[ch] json_uncomment${EXE}
