@@ -41,7 +41,7 @@ install: json_uncomment${EXE}
 	cp -p json_uncomment${EXE} ${INSTALL_PATH}/bin
 
 uninstall:
-	rm -f ${INSTALL_PATH}/bin
+	rm -f ${INSTALL_PATH}/bin/json_uncomment${EXE}
 
 clean:
 	rm json.lex.[ch] json_uncomment${EXE}
