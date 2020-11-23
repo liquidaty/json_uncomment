@@ -26,7 +26,11 @@ endif
 
 INSTALL_PATH=/usr/local
 
-all:	json_uncomment${EXE}
+help: 
+	@echo "Makes json_uncomment and json_uncomment_untracked; installs json_uncomment"
+	@echo "make [WIN=1] [help|all|install|uninstall|clean]"
+
+all:	json_uncomment${EXE} json_uncomment_untracked${EXE}
 
 json_uncomment${EXE}: json_uncomment.lex.c
 	$(CC) ${CFLAGS} -o $@ json_uncomment.lex.c
@@ -45,3 +49,5 @@ uninstall:
 
 clean:
 	rm -f json.lex.[ch] json_uncomment${EXE}
+
+.PHONY: help all install uninstall clean
